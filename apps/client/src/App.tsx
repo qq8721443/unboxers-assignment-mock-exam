@@ -1,5 +1,8 @@
+import { RouterProvider } from "react-router/dom";
+import { router } from "./app/routes/router";
+
 function App() {
-  return <div className="bg-red-500">초기 설정</div>;
+  return <RouterProvider router={router} />;
 }
 
 export default App;
