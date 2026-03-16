@@ -1,1 +1,39 @@
 @import "tailwindcss";
+
+@theme {
+  /* 색상 팔레트 */
+  --color-gs-1: #090909;
+  --color-gs-2: #858585;
+  --color-gs-3: #b6b6b6;
+  --color-gs-4: #f5f5f5;
+  --color-gs-5: #fafafa;
+  --color-gs-6: #ffffff;
+
+  --color-brand-primary: #333333;
+  --color-brand-secondary: #585858;
+  --color-inbrain-blue: #364f8e;
+  --color-inbrain-lightblue: #5784f1;
+  --color-interactive-blue: #5784f1;
+
+  /* 폰트 */
+  --font-pretendard: "Pretendard", sans-serif;
+
+  /* 그림자 */
+  --shadow-standard: 0px 8px 16px 0px rgba(0, 0, 0, 0.03);
+  --shadow-strong: 0px 4px 16px 0px rgba(0, 0, 0, 0.15);
+
+  /* 테두리 반경 */
+  --radius-8: 32px;
+  --radius-3: 12px;
+  --radius-4: 16px;
+
+  /* 그라데이션 */
+  --background-image-black-grad: linear-gradient(90deg, #333333 0%, #585858 100%);
+  --background-image-blue-grad: linear-gradient(90deg, #5784f1 0%, #364f8e 100%);
+}
+
+@layer base {
+  body {
+    @apply font-pretendard text-gs-1 antialiased bg-gs-6;
+  }
+}

@@ -20,5 +20,10 @@
     "lineEnding": "lf",
     "lineWidth": 120,
     "attributePosition": "auto"
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
   }
 }
