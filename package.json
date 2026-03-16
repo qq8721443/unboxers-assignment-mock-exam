@@ -8,5 +8,8 @@
     "db:push": "pnpm --filter server db:push",
     "db:seed": "pnpm --filter server db:seed",
     "client:dev": "pnpm --filter client dev"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.90.21"
   }
 }
