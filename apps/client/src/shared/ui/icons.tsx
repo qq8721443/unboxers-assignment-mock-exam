@@ -103,6 +103,29 @@ export function CheckIcon({ className }: { className?: string }) {
   );
 }
 
+export function CheckOneIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+    >
+      <title>CheckOneIcon</title>
+      <circle cx="12" cy="12" r="10" fill="currentColor" />
+      <path
+        d="M8 12L11 15L16 9"
+        stroke="white"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function XIcon({ className }: { className?: string }) {
   return (
     <svg

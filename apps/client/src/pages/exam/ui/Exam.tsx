@@ -173,7 +173,7 @@ export function ExamPage() {
 
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
-        if (prev <= 1) {
+        if (prev <= 0) {
           if (status === "prep") {
             // 대기 시간 종료 시 시험 시작
             setStatus("testing");
@@ -184,6 +184,7 @@ export function ExamPage() {
             handleInitialSubmit();
             return 0;
           }
+          return 0;
         }
         return prev - 1;
       });
@@ -238,7 +239,7 @@ export function ExamPage() {
               tens: tens,
               units: units,
             }}
-            exam={{ title: exam?.title || "로딩 중", subject: "공통수학2" }}
+            exam={{ title: exam?.title || "로딩 중", subject: "과목" }}
             markedAnswers={markedAnswers}
             activeQuestion={activeQuestion}
             tempSubjectiveValue={tempValue}
@@ -353,7 +354,7 @@ export function ExamPage() {
                 : ((EXAM_TIME - timeLeft) / EXAM_TIME) * 100
             }
             className="rounded-none h-full border-t border-gs-4 shadow-none px-[60px] w-full"
-            onHelpClick={() => alert("도움말 기능은 준비 중입니다.")}
+            onHelpClick={() => {}}
             actionButton={
               status === "testing" && (
                 <button

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { createContext, use } from "react";
-import { MessageReportIcon } from "./icons";
+import { createContext, use, useEffect, useState } from "react";
+import { CheckOneIcon, MessageReportIcon } from "./icons";
 
 interface ExamStatusFooterState {
   title: string;
@@ -79,9 +79,18 @@ function ExamStatusFooterInfo() {
   const { title, statusText, durationText, progress, variant } = state;
   const { onClick } = actions;
 
+  const [prevProgress, setPrevProgress] = useState(progress);
+
+  useEffect(() => {
+    setPrevProgress(progress);
+  }, [progress]);
+
   const isWarning = variant === "warning";
   const statusColor = isWarning ? "text-[#f44c47]" : "text-[#333]";
   const progressColor = isWarning ? "bg-[#f44c47]" : "bg-[#333]";
+
+  // 진행률이 감소하는 경우(예: 100% -> 0% 리셋)에는 애니메이션을 끕니다.
+  const isResetting = progress < prevProgress;
 
   return (
     <div
@@ -100,7 +109,7 @@ function ExamStatusFooterInfo() {
       </div>
       <div className="w-full h-2 bg-[#f5f5f5] rounded-full overflow-hidden mt-1">
         <div
-          className={`h-full ${progressColor} transition-all duration-300`}
+          className={`h-full ${progressColor} ${isResetting ? "transition-none" : "transition-all duration-1000 ease-linear"}`}
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -111,19 +120,43 @@ function ExamStatusFooterInfo() {
 function ExamStatusFooterActions({ children }: { children: ReactNode }) {
   const { actions } = useExamStatusFooter();
   const { onHelpClick } = actions;
+  const [isCalled, setIsCalled] = useState(false);
+
+  useEffect(() => {
+    if (isCalled) {
+      const timer = setTimeout(() => {
+        setIsCalled(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isCalled]);
+
+  const handleHelpClick = () => {
+    onHelpClick?.();
+    setIsCalled(true);
+  };
 
   return (
     <div className="flex items-center gap-3">
-      <button
-        type="button"
-        onClick={onHelpClick}
-        className="flex items-center gap-2 h-[60px] px-6 bg-white rounded-xl shadow-[0px_8px_16px_0px_rgba(0,0,0,0.03)] border border-gray-100 hover:bg-gray-50 transition-colors"
-      >
-        <MessageReportIcon className="w-6 h-6 text-[#090909]" />
-        <span className="font-bold text-[17px] text-[#090909] tracking-tight">
-          문제가 생겼나요?
-        </span>
-      </button>
+      {isCalled ? (
+        <div className="flex items-center justify-center gap-2 h-[52px] w-[200px] bg-white rounded-xl shadow-[0px_8px_16px_0px_rgba(0,0,0,0.03)] border border-gray-100">
+          <CheckOneIcon className="w-6 h-6 text-[#090909]" />
+          <span className="font-bold text-[17px] text-[#090909] tracking-tight">
+            선생님 호출 완료!
+          </span>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={handleHelpClick}
+          className="flex items-center gap-2 w-50 h-13 px-6 bg-white rounded-xl shadow-standard border border-gray-100 hover:bg-gray-50 transition-colors"
+        >
+          <MessageReportIcon className="w-6 h-6 text-[#090909]" />
+          <span className="font-bold text-[17px] text-[#090909] tracking-tight">
+            문제가 생겼나요?
+          </span>
+        </button>
+      )}
       {children}
     </div>
   );
