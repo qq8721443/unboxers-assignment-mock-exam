@@ -1,16 +1,20 @@
+import type { ExamSubmitRequest } from "@custom-types/exam.type";
+import { useAnswerStore } from "@entities/answer/model/answerStore";
+import { useGetExam } from "@entities/exam/api/exam.queries";
+import { useGetStudent } from "@entities/student/api/student.queries";
 import { OMRCard } from "@features/exam/ui/OMRCard";
+import { useSubmitExam } from "@features/submit-exam/api/submit.mutations";
 import { SubjectiveKeypad } from "@features/tutorial/ui/SubjectiveKeypad";
 import { ExamStatusFooter } from "@shared/ui/ExamStatusFooter";
 import { ExitIcon } from "@shared/ui/icons";
-import { useEffect, useState, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { useGetExam } from "@entities/exam/api/exam.queries";
-import { useGetStudent } from "@entities/student/api/student.queries";
-import { useAnswerStore } from "@entities/answer/model/answerStore";
-import { useSubmitExam } from "@features/submit-exam/api/submit.mutations";
-import type { ExamSubmitRequest } from "@custom-types/exam.type";
 
-type ExamStatus = "testing" | "ready" | "submitting" | "submitted";
+type ExamStatus = "prep" | "testing" | "ready" | "submitting" | "submitted";
+
+// 외부에서 주입해야 할 값이라고 생각하지만 현재는 받아올 값이 없어서 상수로 관리.
+const PREP_TIME = 10; // 시험 전 대기 시간 (10초)
+const EXAM_TIME = 10; // 시험 시간 (10초)
 
 export function ExamPage() {
   const navigate = useNavigate();
@@ -18,20 +22,24 @@ export function ExamPage() {
   const { data: studentData } = useGetStudent();
   const answers = useAnswerStore((state) => state.answers);
   const setAnswer = useAnswerStore((state) => state.setAnswer);
-  const { mutate: submit, isPending } = useSubmitExam();
+  const resetAnswer = useAnswerStore((state) => state.resetAnswers);
+  const { mutateAsync: submit, isPending } = useSubmitExam();
 
   const exam = examData?.data;
   const student = studentData;
 
-  // 시험 상태 관리
-  const [status, setStatus] = useState<ExamStatus>("testing");
+  // 시험 상태 관리 (초기 상태: 시험 전 대기)
+  const [status, setStatus] = useState<ExamStatus>("prep");
 
   // OMR 상태 관리 (Zustand 스토어의 데이터를 OMRCard 포맷에 맞게 변환)
   const markedAnswers = useMemo(() => {
-    return answers.reduce((acc, curr) => {
-      acc[curr.number] = curr.answer;
-      return acc;
-    }, {} as Record<number, number[] | string>);
+    return answers.reduce(
+      (acc, curr) => {
+        acc[curr.number] = curr.answer;
+        return acc;
+      },
+      {} as Record<number, number[] | string>,
+    );
   }, [answers]);
 
   const [activeQuestion, setActiveQuestion] = useState<number | undefined>();
@@ -42,32 +50,19 @@ export function ExamPage() {
   const [tens, setTens] = useState<number | undefined>();
   const [units, setUnits] = useState<number | undefined>();
 
-  // 시간 상태
-  const [timeLeft, setTimeLeft] = useState(3600);
-
-  useEffect(() => {
-    if (status !== "testing") return;
-    const timer = setInterval(
-      () => setTimeLeft((prev) => Math.max(0, prev - 1)),
-      1000,
-    );
-    return () => clearInterval(timer);
-  }, [status]);
-
-  useEffect(() => {
-    if (isPending) {
-      setStatus("submitting");
-    }
-  }, [isPending]);
+  // 시간 상태 (초기 상태: 1분 대기)
+  const [timeLeft, setTimeLeft] = useState(PREP_TIME);
 
   const formatTime = (sec: number) => {
     const m = Math.floor(sec / 60);
     const s = sec % 60;
-    return `${m}분 ${s}초 뒤 시작`;
+    if (status === "prep") return `${m}분 ${s}초 뒤 시작`;
+    return `${m}분 ${s}초 남음`;
   };
 
   const handleMarkObjective = (qNum: number, v: number) => {
-    if (status !== "testing") return;
+    // 시험 전(prep)과 시험 중(testing) 모두 마킹 허용
+    if (status !== "prep" && status !== "testing") return;
 
     const current = (markedAnswers[qNum] as number[]) || [];
     const next = current.includes(v)
@@ -78,7 +73,7 @@ export function ExamPage() {
   };
 
   const handleSelectSubjective = (qNum: number) => {
-    if (status !== "testing") return;
+    if (status !== "prep" && status !== "testing") return;
     if (activeQuestion === qNum) {
       setActiveQuestion(undefined);
       setTempValue("");
@@ -111,34 +106,14 @@ export function ExamPage() {
   };
 
   // 푸터에서 제출 버튼 클릭 시
-  const handleInitialSubmit = () => {
+  const handleInitialSubmit = useCallback(() => {
     if (!student) return;
 
-    if (grade === undefined || tens === undefined || units === undefined) {
-      alert("학년과 번호를 모두 마킹해주세요.");
-      return;
-    }
-
-    // 학년 및 번호 일치 여부 검증
-    const markedStudentNumber = (tens ?? 0) * 10 + (units ?? 0);
-
-    if (
-      grade !== student.grade ||
-      markedStudentNumber !== student.studentNumber
-    ) {
-      alert(
-        "마킹한 학년 또는 번호가 학생 정보와 일치하지 않습니다. 다시 확인해주세요.",
-      );
-      return;
-    }
-
-    if (confirm("답안을 제출하시겠습니까?")) {
-      setStatus("ready");
-    }
-  };
+    setStatus("ready");
+  }, [student]);
 
   // 채점 시작하기 버튼 클릭 시
-  const handleStartGrading = () => {
+  const handleStartGrading = useCallback(async () => {
     if (!student) return;
 
     const payload: ExamSubmitRequest = {
@@ -170,10 +145,55 @@ export function ExamPage() {
       }),
     };
 
-    submit(payload);
-  };
+    try {
+      setStatus("submitting");
+      // 최소 2초 대기 + API 호출
+      const [response] = await Promise.all([
+        submit(payload),
+        new Promise((resolve) => setTimeout(resolve, 2000)),
+      ]);
 
-  const isTesting = status === "testing";
+      resetAnswer();
+      navigate("/result", { state: response.data });
+    } catch (error) {
+      console.error("Submission failed:", error);
+      setStatus("testing");
+    }
+  }, [student, submit, answers, grade, navigate, resetAnswer]);
+
+  useEffect(() => {
+    // ready, submitting 상태에서는 타이머를 멈춥니다.
+    if (status === "ready" || status === "submitting" || status === "submitted")
+      return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          if (status === "prep") {
+            // 대기 시간 종료 시 시험 시작
+            setStatus("testing");
+            return EXAM_TIME;
+          }
+          if (status === "testing") {
+            // 시험 시간 종료 시 자동 제출
+            handleInitialSubmit();
+            return 0;
+          }
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [status, handleInitialSubmit]);
+
+  useEffect(() => {
+    if (isPending) {
+      setStatus("submitting");
+    }
+  }, [isPending]);
+
+  const isTesting = status === "testing" || status === "prep";
 
   return (
     <div className="min-h-screen bg-[#f5f5f5] flex flex-col font-pretendard select-none overflow-hidden items-center justify-center p-4 relative">
@@ -308,24 +328,37 @@ export function ExamPage() {
         )}
       </main>
 
-      {/* Footer (only visible during testing) */}
+      {/* Footer (only visible during testing or prep) */}
       {isTesting && (
         <footer className="fixed bottom-0 left-0 right-0 h-[161px] bg-white z-40 flex items-center shadow-[0_-4px_20px_rgba(0,0,0,0.05)] animate-in slide-in-from-bottom duration-500">
           <ExamStatusFooter
-            title={exam?.title || "시험이 곧 시작됩니다..."}
+            title={
+              status === "prep"
+                ? "시험 시작까지 남은 시간"
+                : exam?.title || "시험 종료까지 남은 시간"
+            }
             statusText={formatTime(timeLeft)}
-            durationText="시험 시간 60분"
-            progress={((3600 - timeLeft) / 3600) * 100}
+            durationText={
+              // TODO: PREP_TIME, EXAM_TIME에 맞게 변경해야 함.
+              status === "prep" ? `대기 시간 10초` : "시험 시간 10초"
+            }
+            progress={
+              status === "prep"
+                ? 100
+                : ((EXAM_TIME - timeLeft) / EXAM_TIME) * 100
+            }
             className="rounded-none h-full border-t border-gs-4 shadow-none px-[60px] w-full"
             onHelpClick={() => alert("도움말 기능은 준비 중입니다.")}
             actionButton={
-              <button
-                type="button"
-                onClick={handleInitialSubmit}
-                className="h-[60px] px-12 bg-gs-1 text-white rounded-xl font-bold text-[20px] shadow-lg active:scale-95 transition-all cursor-pointer"
-              >
-                제출하기
-              </button>
+              status === "testing" && (
+                <button
+                  type="button"
+                  onClick={handleInitialSubmit}
+                  className="h-[60px] px-12 bg-gs-1 text-white rounded-xl font-bold text-[20px] shadow-lg active:scale-95 transition-all cursor-pointer"
+                >
+                  제출하기
+                </button>
+              )
             }
           />
         </footer>

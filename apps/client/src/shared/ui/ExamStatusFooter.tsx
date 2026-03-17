@@ -21,17 +21,22 @@ interface ExamStatusFooterContextValue {
   actions: ExamStatusFooterActions;
 }
 
-const ExamStatusFooterContext = createContext<ExamStatusFooterContextValue | null>(null);
+const ExamStatusFooterContext =
+  createContext<ExamStatusFooterContextValue | null>(null);
 
 function useExamStatusFooter() {
   const context = use(ExamStatusFooterContext);
   if (!context) {
-    throw new Error("useExamStatusFooter must be used within a ExamStatusFooterRoot");
+    throw new Error(
+      "useExamStatusFooter must be used within a ExamStatusFooterRoot",
+    );
   }
   return context;
 }
 
-interface ExamStatusFooterRootProps extends ExamStatusFooterState, ExamStatusFooterActions {
+interface ExamStatusFooterRootProps
+  extends ExamStatusFooterState,
+    ExamStatusFooterActions {
   children: ReactNode;
 }
 
@@ -79,14 +84,25 @@ function ExamStatusFooterInfo() {
   const progressColor = isWarning ? "bg-[#f44c47]" : "bg-[#333]";
 
   return (
-    <div className={`flex flex-1 flex-col gap-2 items-start ${onClick ? "cursor-pointer active:opacity-70" : ""}`}>
-      <p className="font-extrabold text-[17px] text-[#333] tracking-wider">{title}</p>
+    <div
+      className={`flex flex-1 flex-col gap-2 items-start ${onClick ? "cursor-pointer active:opacity-70" : ""}`}
+    >
+      <p className="font-extrabold text-[17px] text-[#333] tracking-wider">
+        {title}
+      </p>
       <div className="flex items-end justify-between w-full">
-        <p className={`font-extrabold text-[48px] ${statusColor} leading-none`}>{statusText}</p>
-        <p className="font-semibold text-[17px] text-[#333] mb-1">{durationText}</p>
+        <p className={`font-extrabold text-[48px] ${statusColor} leading-none`}>
+          {statusText}
+        </p>
+        <p className="font-semibold text-[17px] text-[#333] mb-1">
+          {durationText}
+        </p>
       </div>
       <div className="w-full h-2 bg-[#f5f5f5] rounded-full overflow-hidden mt-1">
-        <div className={`h-full ${progressColor} transition-all duration-300`} style={{ width: `${progress}%` }} />
+        <div
+          className={`h-full ${progressColor} transition-all duration-300`}
+          style={{ width: `${progress}%` }}
+        />
       </div>
     </div>
   );
@@ -104,7 +120,9 @@ function ExamStatusFooterActions({ children }: { children: ReactNode }) {
         className="flex items-center gap-2 h-[60px] px-6 bg-white rounded-xl shadow-[0px_8px_16px_0px_rgba(0,0,0,0.03)] border border-gray-100 hover:bg-gray-50 transition-colors"
       >
         <MessageReportIcon className="w-6 h-6 text-[#090909]" />
-        <span className="font-bold text-[17px] text-[#090909] tracking-tight">문제가 생겼나요?</span>
+        <span className="font-bold text-[17px] text-[#090909] tracking-tight">
+          문제가 생겼나요?
+        </span>
       </button>
       {children}
     </div>
@@ -121,7 +139,8 @@ export const ExamStatusFooter = ({
   variant = "default",
   className = "",
   actionButton,
-}: ExamStatusFooterState & ExamStatusFooterActions & { actionButton?: ReactNode }) => {
+}: ExamStatusFooterState &
+  ExamStatusFooterActions & { actionButton?: ReactNode }) => {
   return (
     <ExamStatusFooterRoot
       title={title}
