@@ -50,7 +50,7 @@ export function ExamPage() {
   const [tens, setTens] = useState<number | undefined>();
   const [units, setUnits] = useState<number | undefined>();
 
-  // 시간 상태 (초기 상태: 1분 대기)
+  // 시간 상태
   const [timeLeft, setTimeLeft] = useState(PREP_TIME);
 
   const formatTime = (sec: number) => {
@@ -116,11 +116,16 @@ export function ExamPage() {
   const handleStartGrading = useCallback(async () => {
     if (!student) return;
 
+    let studentNumber = 0;
+    if (tens !== undefined && units !== undefined) {
+      studentNumber = tens * 10 + units;
+    }
+
     const payload: ExamSubmitRequest = {
       name: student.name,
       school: student.school,
       grade: grade ?? student.grade,
-      studentNumber: student.studentNumber,
+      studentNumber: studentNumber ?? student.studentNumber,
       seatNumber: student.seatNumber,
       answers: answers.map((a) => {
         let finalAnswer = 0;
@@ -131,8 +136,8 @@ export function ExamPage() {
             Array.isArray(a.answer) ? a.answer.join("") : a.answer,
           );
         } else {
-          // 주관식: 문자열에서 숫자와 마이너스, 점만 남기고 숫자로 변환
-          const cleaned = String(a.answer).replace(/[^0-9.-]/g, "");
+          // 주관식: 문자열에서 숫자와 마이너스, 점 슬래시(/)만 남기고 숫자로 변환
+          const cleaned = String(a.answer).replace(/[^0-9.-/]/g, "");
           finalAnswer = cleaned ? Number(cleaned) : 0;
         }
 
@@ -159,7 +164,7 @@ export function ExamPage() {
       console.error("Submission failed:", error);
       setStatus("testing");
     }
-  }, [student, submit, answers, grade, navigate, resetAnswer]);
+  }, [student, submit, answers, grade, tens, units, navigate, resetAnswer]);
 
   useEffect(() => {
     // ready, submitting 상태에서는 타이머를 멈춥니다.
