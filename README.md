@@ -180,3 +180,5 @@ pnpm dev
 pnpm install
 pnpm client:dev
 ```
+
+[Client README 확인하기](./apps/client/README.md)
