@@ -82,12 +82,12 @@ export function OMRCard({
 
         {/* 2. 학년 마킹 */}
         <div className="w-[36px] h-[612px] flex flex-col">
-          <div className="h-10 border-[1.5px] border-[#5784f1] flex items-center justify-center bg-white">
-            <span className="text-[#364f8e] text-[13px] font-bold leading-[1.2] text-center whitespace-pre">
+          <div className="h-[41px] border-[1.5px] border-[#5784f1] flex items-center justify-center shrink-0">
+            <span className="text-[#364f8e] text-[14px] font-bold leading-[1.2] text-center whitespace-pre">
               {"학\n년"}
             </span>
           </div>
-          <div className="flex-1 border-[1.5px] border-[#5784f1] border-t-0 p-[12px_8px] flex flex-col gap-[12px] items-center bg-white">
+          <div className="flex-1 border-[1.5px] border-[#5784f1] border-t-0 p-[12px_8px] flex flex-col gap-[12px] items-center ">
             {grades.map((n) => (
               <MarkingButton
                 key={n}
@@ -101,11 +101,11 @@ export function OMRCard({
 
         {/* 3. 번호 마킹 */}
         <div className="w-[66px] h-[612px] flex flex-col">
-          <div className="h-10 border-[1.5px] border-[#5784f1] border-l-0 flex items-center justify-center bg-white">
-            <span className="text-[#364f8e] text-[13px] font-bold">번호</span>
+          <div className="h-[41px] border-[1.5px] border-[#5784f1] border-l-0 flex items-center justify-center shrink-0">
+            <span className="text-[#364f8e] text-[17px] font-bold">번호</span>
           </div>
-          <div className="flex-1 border-[1.5px] border-[#5784f1] border-t-0 border-l-0 flex gap-0 bg-[#5784f1]">
-            <div className="flex-1 flex flex-col gap-[12px] items-center bg-white p-[12px_8px] pr-[5px]">
+          <div className="flex-1 h-[513.9px] border-[1.5px] border-[#5784f1] border-t-0 border-l-0 flex gap-0">
+            <div className="flex-1 flex flex-col gap-[12px] items-center  p-[12px_8px] pr-[5px]">
               {digits.map((n) => (
                 <MarkingButton
                   key={n}
@@ -115,7 +115,7 @@ export function OMRCard({
                 />
               ))}
             </div>
-            <div className="flex-1 flex flex-col gap-[12px] items-center bg-white p-[12px_8px] pl-[5px]">
+            <div className="flex-1 flex flex-col gap-[12px] items-center  p-[12px_8px] pl-[5px]">
               {digits.map((n) => (
                 <MarkingButton
                   key={n}
@@ -130,18 +130,18 @@ export function OMRCard({
 
         {/* 4. 객관식 답안 */}
         <div className="w-[552px] h-[612px] flex flex-col">
-          <div className="h-10 border-[1.5px] border-[#5784f1] border-l-0 flex items-center justify-center bg-white">
-            <span className="text-[#364f8e] text-[15px] font-bold tracking-[1em] ml-[1em]">
+          <div className="h-[41px] border-[1.5px] border-[#5784f1] border-l-0 flex items-center justify-center shrink-0">
+            <span className="text-[#364f8e] text-[24px] font-bold tracking-[1em] ml-[1em]">
               객관식답안
             </span>
           </div>
-          <div className="flex-1 border-[1.5px] border-[#5784f1] border-t-0 border-l-0 flex bg-white">
+          <div className="flex-1 h-[513.9px] border-[1.5px] border-[#5784f1] border-t-0 border-l-0 flex ">
             {[0, 10, 20].map((base) => (
               <div
                 key={base}
-                className="w-[184px] h-full flex border-r-[1.5px] border-[#5784f1] last:border-r-0"
+                className="relative w-[184px] h-full flex border-r-[1.5px] border-[#5784f1] last:border-r-0"
               >
-                <div className="w-7 h-full bg-[#5784f1]/20 border-r-[1.5px] border-[#5784f1] flex flex-col p-[12px_0]">
+                <div className="w-7 h-full bg-[#5784f1]/20 border-r-[1.5px] border-[#5784f1] flex flex-col p-[12px_0] justify-between gap-3">
                   {Array.from({ length: 10 }, (_, i) => {
                     const qNum = base + i + 1;
                     return (
@@ -154,7 +154,10 @@ export function OMRCard({
                     );
                   })}
                 </div>
-                <div className="flex-1 h-full flex flex-col p-[12px_8px] gap-[12px]">
+                <div className="relative flex-1 h-full flex flex-col p-[12px_0] gap-[12px]">
+                  <div
+                    className={`absolute left-0 w-full h-[50%] bg-[#5784F1]/10 ${base === 10 ? "top-0" : "bottom-0"}`}
+                  />
                   {Array.from({ length: 10 }, (_, i) => {
                     const qNum = base + i + 1;
                     const currentMarks =
@@ -162,7 +165,7 @@ export function OMRCard({
                     return (
                       <div
                         key={qNum}
-                        className="flex-1 flex items-center justify-center gap-[10px]"
+                        className="relative flex-1 flex items-center justify-center gap-[10px] px-2"
                       >
                         {[1, 2, 3, 4, 5].map((v) => (
                           <button
@@ -178,6 +181,9 @@ export function OMRCard({
                             {v}
                           </button>
                         ))}
+                        {i === 4 && (
+                          <div className="absolute w-full -bottom-1.5 border-b border-dotted border-b-inbrain-lightblue" />
+                        )}
                       </div>
                     );
                   })}
@@ -189,12 +195,12 @@ export function OMRCard({
 
         {/* 5. 주관식 답안 */}
         <div className="w-[360px] h-[612px] flex flex-col">
-          <div className="h-10 border-[1.5px] border-[#5784f1] border-l-0 flex items-center justify-center bg-white">
-            <span className="text-[#364f8e] text-[15px] font-bold tracking-[1em] ml-[1em]">
+          <div className="h-[41px] border-[1.5px] border-[#5784f1] border-l-0 flex items-center justify-center shrink-0">
+            <span className="text-[#364f8e] text-[24px] font-bold tracking-[1em] ml-[1em]">
               주관식답안
             </span>
           </div>
-          <div className="flex-1 border-[1.5px] border-[#5784f1] border-t-0 border-l-0 flex flex-col bg-white">
+          <div className="flex-1 border-[1.5px] border-[#5784f1] border-t-0 border-l-0 flex flex-col ">
             {Array.from({ length: 12 }, (_, i) => {
               const qNum = 31 + i;
               const displayNum = i + 1;
@@ -266,12 +272,12 @@ function InfoRow({ label, value }: { label: string; value?: string | number }) {
   return (
     <div className="flex h-10 w-[200px] border-[#5784f1] border-r-[1.5px] border-b-[1.5px]">
       <div className="w-7 h-full flex items-center justify-center border-r-[1.5px] border-[#5784f1] shrink-0">
-        <span className="text-[#364f8e] text-[13px] font-bold leading-[1.2] whitespace-pre-wrap text-center">
+        <span className="text-[#364f8e] text-[14px] font-bold leading-[1.2] whitespace-pre-wrap text-center">
           {label.split(" ").join("\n")}
         </span>
       </div>
-      <div className="flex-1 h-full flex items-center px-3 bg-white">
-        <span className="text-[#364f8e] text-[14px] font-bold truncate">
+      <div className="flex-1 h-full flex items-center px-3 ">
+        <span className="text-[#364f8e] text-[17px] font-bold truncate">
           {value ?? ""}
         </span>
       </div>

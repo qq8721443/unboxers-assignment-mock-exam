@@ -198,7 +198,7 @@ export function ExamPage() {
   return (
     <div className="min-h-screen bg-[#f5f5f5] flex flex-col font-pretendard select-none overflow-hidden items-center justify-center p-4 relative">
       {/* Top Navigation Bar (Exit Button) */}
-      <div className="absolute top-[25px] right-[26.04px] z-50">
+      <div className="fixed top-[25px] right-[26.04px] z-50">
         <button
           type="button"
           onClick={handleExit}
