@@ -6,6 +6,8 @@ import { Step2Objective } from "@features/tutorial/ui/steps/Step2Objective";
 import { Step3Subjective } from "@features/tutorial/ui/steps/Step3Subjective";
 import { Step4Submit } from "@features/tutorial/ui/steps/Step4Submit";
 import { ArrowLeftIcon, ChevronDownIcon } from "@shared/ui/icons";
+import { useGetStudent } from "@entities/student/api/student.queries";
+import type { Student } from "@custom-types/exam.type";
 
 // 앱 로드 시점에 이미지를 한 번만 로드하여 메모리에 상주시킵니다.
 if (typeof window !== "undefined") {
@@ -13,7 +15,11 @@ if (typeof window !== "undefined") {
   img.src = omrImage;
 }
 
-function TutorialContent() {
+interface TutorialContentProps {
+  student?: Student;
+}
+
+function TutorialContent({ student }: TutorialContentProps) {
   const { state, actions } = useTutorial();
   const { currentStep, interactionCompleted } = state;
 
@@ -51,7 +57,7 @@ function TutorialContent() {
         </div>
         <div className="flex items-center gap-[16px] flex-1 justify-end">
           <div className="bg-gs-6 border border-gs-5 h-[44px] px-[16px] flex items-center justify-between rounded-[10px] shadow-standard w-[180px]">
-            <span className="text-[17px] font-bold tracking-[-0.408px]">홍정기 학생</span>
+            <span className="text-[17px] font-bold tracking-[-0.408px]">{student?.name || "학생"} 학생</span>
             <ChevronDownIcon />
           </div>
           <button
@@ -111,9 +117,11 @@ function TutorialContent() {
 }
 
 export function TutorialPage() {
+  const { data: student } = useGetStudent();
+
   return (
     <TutorialProvider>
-      <TutorialContent />
+      <TutorialContent student={student} />
     </TutorialProvider>
   );
 }

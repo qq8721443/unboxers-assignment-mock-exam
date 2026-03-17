@@ -2,21 +2,38 @@ import { OMRCard } from "@features/exam/ui/OMRCard";
 import { SubjectiveKeypad } from "@features/tutorial/ui/SubjectiveKeypad";
 import { ExamStatusFooter } from "@shared/ui/ExamStatusFooter";
 import { ExitIcon } from "@shared/ui/icons";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router";
+import { useGetExam } from "@entities/exam/api/exam.queries";
+import { useGetStudent } from "@entities/student/api/student.queries";
+import { useAnswerStore } from "@entities/answer/model/answerStore";
+import { useSubmitExam } from "@features/submit-exam/api/submit.mutations";
+import type { ExamSubmitRequest } from "@custom-types/exam.type";
 
 type ExamStatus = "testing" | "ready" | "submitting" | "submitted";
 
 export function ExamPage() {
   const navigate = useNavigate();
+  const { data: examData } = useGetExam();
+  const { data: studentData } = useGetStudent();
+  const answers = useAnswerStore((state) => state.answers);
+  const setAnswer = useAnswerStore((state) => state.setAnswer);
+  const { mutate: submit, isPending } = useSubmitExam();
+
+  const exam = examData?.data;
+  const student = studentData;
 
   // 시험 상태 관리
   const [status, setStatus] = useState<ExamStatus>("testing");
 
-  // OMR 상태 관리
-  const [markedAnswers, setMarkedAnswers] = useState<
-    Record<number, number[] | string>
-  >({});
+  // OMR 상태 관리 (Zustand 스토어의 데이터를 OMRCard 포맷에 맞게 변환)
+  const markedAnswers = useMemo(() => {
+    return answers.reduce((acc, curr) => {
+      acc[curr.number] = curr.answer;
+      return acc;
+    }, {} as Record<number, number[] | string>);
+  }, [answers]);
+
   const [activeQuestion, setActiveQuestion] = useState<number | undefined>();
   const [tempValue, setTempValue] = useState("");
 
@@ -37,6 +54,12 @@ export function ExamPage() {
     return () => clearInterval(timer);
   }, [status]);
 
+  useEffect(() => {
+    if (isPending) {
+      setStatus("submitting");
+    }
+  }, [isPending]);
+
   const formatTime = (sec: number) => {
     const m = Math.floor(sec / 60);
     const s = sec % 60;
@@ -45,13 +68,13 @@ export function ExamPage() {
 
   const handleMarkObjective = (qNum: number, v: number) => {
     if (status !== "testing") return;
-    setMarkedAnswers((prev) => {
-      const current = (prev[qNum] as number[]) || [];
-      const next = current.includes(v)
-        ? current.filter((item) => item !== v)
-        : [...current, v].sort();
-      return { ...prev, [qNum]: next };
-    });
+
+    const current = (markedAnswers[qNum] as number[]) || [];
+    const next = current.includes(v)
+      ? current.filter((item) => item !== v)
+      : [...current, v].sort();
+
+    setAnswer(qNum, next, "objective");
   };
 
   const handleSelectSubjective = (qNum: number) => {
@@ -66,8 +89,12 @@ export function ExamPage() {
   };
 
   const handleCompleteSubjective = (val: string) => {
-    if (activeQuestion) {
-      setMarkedAnswers((prev) => ({ ...prev, [activeQuestion]: val }));
+    // 현재 활성화된 문항 번호를 캡처합니다.
+    const qNum = activeQuestion;
+    if (qNum) {
+      // 스토어에 저장
+      setAnswer(qNum, val, "subjective");
+      // 선택 상태 및 입력값 초기화
       setActiveQuestion(undefined);
       setTempValue("");
     }
@@ -85,10 +112,26 @@ export function ExamPage() {
 
   // 푸터에서 제출 버튼 클릭 시
   const handleInitialSubmit = () => {
+    if (!student) return;
+
     if (grade === undefined || tens === undefined || units === undefined) {
       alert("학년과 번호를 모두 마킹해주세요.");
       return;
     }
+
+    // 학년 및 번호 일치 여부 검증
+    const markedStudentNumber = (tens ?? 0) * 10 + (units ?? 0);
+
+    if (
+      grade !== student.grade ||
+      markedStudentNumber !== student.studentNumber
+    ) {
+      alert(
+        "마킹한 학년 또는 번호가 학생 정보와 일치하지 않습니다. 다시 확인해주세요.",
+      );
+      return;
+    }
+
     if (confirm("답안을 제출하시겠습니까?")) {
       setStatus("ready");
     }
@@ -96,12 +139,38 @@ export function ExamPage() {
 
   // 채점 시작하기 버튼 클릭 시
   const handleStartGrading = () => {
-    setStatus("submitting");
-    // 3초 후 제출 완료 상태로 변경 (스캔 애니메이션 효과를 위해)
-    setTimeout(() => {
-      // TODO: submit API 호출 코드로 변경 필요.
-      navigate("/result");
-    }, 3000);
+    if (!student) return;
+
+    const payload: ExamSubmitRequest = {
+      name: student.name,
+      school: student.school,
+      grade: grade ?? student.grade,
+      studentNumber: student.studentNumber,
+      seatNumber: student.seatNumber,
+      answers: answers.map((a) => {
+        let finalAnswer = 0;
+
+        if (a.answerType === "objective") {
+          // 객관식: [1, 2] -> "12" -> 12로 변환 (중복 선택 가능 상황 고려)
+          finalAnswer = Number(
+            Array.isArray(a.answer) ? a.answer.join("") : a.answer,
+          );
+        } else {
+          // 주관식: 문자열에서 숫자와 마이너스, 점만 남기고 숫자로 변환
+          const cleaned = String(a.answer).replace(/[^0-9.-]/g, "");
+          finalAnswer = cleaned ? Number(cleaned) : 0;
+        }
+
+        return {
+          answerType: a.answerType,
+          // 주관식(subjective)은 31~42번으로 관리되고 있으므로, 서버 전송 시 1~12번이 되도록 30을 뺍니다.
+          number: a.answerType === "subjective" ? a.number - 30 : a.number,
+          answer: Number.isNaN(finalAnswer) ? 0 : finalAnswer,
+        };
+      }),
+    };
+
+    submit(payload);
   };
 
   const isTesting = status === "testing";
@@ -136,15 +205,15 @@ export function ExamPage() {
         >
           <OMRCard
             student={{
-              name: "권성민",
-              school: "배방고등학교",
-              seatNumber: "21번",
-              supervisor: "신희철",
+              name: student?.name || "로딩 중",
+              school: student?.school || "로딩 중",
+              seatNumber: `${student?.seatNumber || 0}번`,
+              supervisor: exam?.supervisorName || "로딩 중",
               grade: grade,
               tens: tens,
               units: units,
             }}
-            exam={{ title: "TEN-UP 모의고사", subject: "공통수학2" }}
+            exam={{ title: exam?.title || "로딩 중", subject: "공통수학2" }}
             markedAnswers={markedAnswers}
             activeQuestion={activeQuestion}
             tempSubjectiveValue={tempValue}
@@ -243,7 +312,7 @@ export function ExamPage() {
       {isTesting && (
         <footer className="fixed bottom-0 left-0 right-0 h-[161px] bg-white z-40 flex items-center shadow-[0_-4px_20px_rgba(0,0,0,0.05)] animate-in slide-in-from-bottom duration-500">
           <ExamStatusFooter
-            title="시험이 곧 시작됩니다..."
+            title={exam?.title || "시험이 곧 시작됩니다..."}
             statusText={formatTime(timeLeft)}
             durationText="시험 시간 60분"
             progress={((3600 - timeLeft) / 3600) * 100}

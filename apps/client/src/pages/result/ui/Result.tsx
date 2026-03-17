@@ -23,7 +23,7 @@ export function ResultPage() {
   const navigate = useNavigate();
 
   // state에 데이터가 없으면 MOCK_RESULT를 기본값으로 사용합니다.
-  const result = (location.state?.result as ExamResult) || MOCK_RESULT;
+  const result = (location.state as ExamResult) || MOCK_RESULT;
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col p-8 lg:p-16">

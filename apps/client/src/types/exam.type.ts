@@ -44,7 +44,7 @@ export interface Student {
 export interface Answer {
   answerType: AnswerType;
   number: number;
-  answer: string | number;
+  answer: number;
 }
 
 /**

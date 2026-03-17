@@ -51,11 +51,6 @@ export function OMRCard({
     onSelectUnits(student.units === n ? undefined : n);
   };
 
-  const displayNum =
-    student.tens !== undefined || student.units !== undefined
-      ? `${student.tens ?? ""}${student.units ?? ""}`
-      : "";
-
   return (
     <div className="bg-[#fffdf1] rounded-[32px] p-[16px_24px_4px_24px] flex flex-col items-center justify-center shadow-strong w-[1262px] h-[659px] select-none shrink-0 font-pretendard border-none">
       <div className="flex items-center justify-start w-[1214px] h-[613px]">
@@ -67,7 +62,7 @@ export function OMRCard({
             <InfoRow label="성 명" value={student.name} />
             <InfoRow label="학 교" value={student.school} />
             <InfoRow label="좌 석" value={student.seatNumber} />
-            <InfoRow label="번 호" value={displayNum} />
+            <InfoRow label="감 독" value={student.supervisor} />
           </div>
 
           <div className="flex-1 flex flex-col items-center justify-center gap-4 mr-2 text-[#364f8e]">
