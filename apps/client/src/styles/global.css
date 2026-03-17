@@ -32,6 +32,28 @@
   --background-image-blue-grad: linear-gradient(90deg, #5784f1 0%, #364f8e 100%);
 }
 
+@keyframes scan {
+  0% { left: 0; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { left: 100%; opacity: 0; }
+}
+
+@keyframes scan-area {
+  0% { left: -100px; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { left: calc(100% - 100px); opacity: 0; }
+}
+
+.animate-scan {
+  animation: scan 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-scan-area {
+  animation: scan-area 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
 @layer base {
   body {
     @apply font-pretendard text-gs-1 antialiased bg-gs-6;

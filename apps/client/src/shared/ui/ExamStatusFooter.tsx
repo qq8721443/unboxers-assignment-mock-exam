@@ -61,7 +61,7 @@ function ExamStatusFooterRoot({
       }}
     >
       <div
-        className={`bg-white flex items-center justify-between gap-9 px-[60px] py-6 shadow-[0px_4px_16px_0px_rgba(0,0,0,0.15)] rounded-[16px] ${className}`}
+        className={`bg-white flex items-center justify-between gap-9 px-[60px] py-6 shadow-[0px_4px_16px_0px_rgba(0,0,0,0.15)] ${className || "rounded-[16px]"}`}
       >
         {children}
       </div>

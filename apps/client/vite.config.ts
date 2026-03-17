@@ -6,7 +6,11 @@ import { defineConfig } from "vite";
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), babel({ presets: [reactCompilerPreset()] }), tailwindcss()],
+  plugins: [
+    react(),
+    babel({ presets: [reactCompilerPreset()] }),
+    tailwindcss(),
+  ],
   resolve: {
     alias: {
       "@shared": path.resolve(__dirname, "./src/shared"),
@@ -16,6 +20,7 @@ export default defineConfig({
       "@pages": path.resolve(__dirname, "./src/pages"),
       "@app": path.resolve(__dirname, "./src/app"),
       "@styles": path.resolve(__dirname, "./src/styles"),
+      "@custom-types": path.resolve(__dirname, "./src/types"),
     },
   },
 });

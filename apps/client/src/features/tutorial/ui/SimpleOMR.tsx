@@ -37,7 +37,13 @@ interface SimpleOMRRootProps {
   target?: { q: number; v: number };
 }
 
-function SimpleOMRRoot({ children, marked, onMark, allowMultiple, target }: SimpleOMRRootProps) {
+function SimpleOMRRoot({
+  children,
+  marked,
+  onMark,
+  allowMultiple,
+  target,
+}: SimpleOMRRootProps) {
   return (
     <SimpleOMRContext
       value={{
@@ -84,13 +90,19 @@ function SimpleOMRContent() {
               <div
                 key={i}
                 className={`flex gap-[10px] px-3 h-11 items-center ${
-                  (base + i + 1) % 5 === 0 ? "border-b-[0.5px] border-inbrain-lightblue/30" : ""
+                  (base + i + 1) % 5 === 0
+                    ? "border-b-[0.5px] border-inbrain-lightblue/30"
+                    : ""
                 }`}
               >
                 {CHOICES.map((v) => {
                   const qNum = base + i + 1;
-                  const isTarget = target ? target.q === qNum && target.v === v : true;
-                  const isMarked = allowMultiple ? (marked[qNum] as number[])?.includes(v) : marked[qNum] === v;
+                  const isTarget = target
+                    ? target.q === qNum && target.v === v
+                    : true;
+                  const isMarked = allowMultiple
+                    ? (marked[qNum] as number[])?.includes(v)
+                    : marked[qNum] === v;
 
                   return (
                     <button
@@ -99,7 +111,9 @@ function SimpleOMRContent() {
                       disabled={!isTarget}
                       onClick={() => onMark(qNum, v)}
                       className={`w-5 h-[34px] rounded-full flex items-center justify-center text-[14px] font-bold transition-all ${
-                        isMarked ? "bg-gs-1 text-gs-6" : "bg-[#a5a4a0] text-gs-6"
+                        isMarked
+                          ? "bg-gs-1 text-gs-6"
+                          : "bg-[#a5a4a0] text-gs-6"
                       } ${!isTarget ? "opacity-30 cursor-not-allowed" : "hover:scale-110 active:scale-95 cursor-pointer"}`}
                     >
                       {v}
@@ -116,9 +130,19 @@ function SimpleOMRContent() {
 }
 
 // 헬퍼 컴포넌트 (기존 인터페이스 유지용)
-export function SimpleOMR({ marked, onMark, allowMultiple, target }: Omit<SimpleOMRRootProps, "children">) {
+export function SimpleOMR({
+  marked,
+  onMark,
+  allowMultiple,
+  target,
+}: Omit<SimpleOMRRootProps, "children">) {
   return (
-    <SimpleOMRRoot marked={marked} onMark={onMark} allowMultiple={allowMultiple} target={target}>
+    <SimpleOMRRoot
+      marked={marked}
+      onMark={onMark}
+      allowMultiple={allowMultiple}
+      target={target}
+    >
       <SimpleOMRHeader />
       <SimpleOMRContent />
     </SimpleOMRRoot>

@@ -31,8 +31,9 @@
       "@widgets/*": ["src/widgets/*"],
       "@pages/*": ["src/pages/*"],
       "@app/*": ["src/app/*"],
-      "@styles/*": ["src/styles/*"]
-    }
+      "@styles/*": ["src/styles/*"],
+      "@custom-types/*": ["src/types/*"],
+    },
   },
-  "include": ["src"]
+  "include": ["src"],
 }
